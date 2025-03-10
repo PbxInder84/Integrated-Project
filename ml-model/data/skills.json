@@ -1,30 +1,146 @@
 {
     "programming_languages": [
-      "Python", "JavaScript", "Java", "C++", "C#", "Go", "Ruby", "Swift", "Kotlin", "PHP", "TypeScript"
+        "python",
+        "javascript",
+        "java",
+        "c++",
+        "ruby",
+        "php",
+        "typescript",
+        "html",
+        "css",
+        "sql"
+    ],
+    "frameworks": [
+        "react",
+        "react.js",
+        "node",
+        "node.js",
+        "express",
+        "express.js",
+        "next.js",
+        "vue",
+        "vue.js",
+        "angular",
+        "django",
+        "flask",
+        "bootstrap",
+        "tailwind"
+    ],
+    "databases": [
+        "mongodb",
+        "mysql",
+        "postgresql",
+        "redis",
+        "sqlite"
+    ],
+    "cloud_devops": [
+        "aws",
+        "azure",
+        "gcp",
+        "docker",
+        "kubernetes",
+        "jenkins",
+        "git",
+        "github",
+        "gitlab",
+        "ci/cd"
+    ],
+    "tools": [
+        "vscode",
+        "postman",
+        "jira",
+        "figma",
+        "npm",
+        "yarn",
+        "webpack"
+    ],
+    "technologies": [
+        "mern",
+        "rest",
+        "api",
+        "machine learning",
+        "scikit-learn",
+        "pandas"
     ],
     "web_development": [
-      "HTML", "CSS", "JavaScript", "React.js", "Angular", "Vue.js", "Next.js", "Node.js", "Express.js", "Django", "Flask", "Spring Boot"
+        "html",
+        "css",
+        "javascript",
+        "react.js",
+        "angular",
+        "vue.js",
+        "next.js",
+        "node.js",
+        "express.js",
+        "django",
+        "flask",
+        "spring boot"
     ],
     "data_science": [
-      "Machine Learning", "Deep Learning", "Data Analysis", "Pandas", "NumPy", "Scikit-Learn", "TensorFlow", "PyTorch", "Matplotlib", "Seaborn"
+        "machine learning",
+        "deep learning",
+        "data analysis",
+        "pandas",
+        "numpy",
+        "scikit-learn",
+        "tensorflow",
+        "pytorch",
+        "matplotlib",
+        "seaborn"
     ],
     "database_management": [
-      "SQL", "MySQL", "PostgreSQL", "MongoDB", "Firebase", "SQLite", "Oracle DB", "Microsoft SQL Server"
+        "sql",
+        "mysql",
+        "postgresql",
+        "mongodb",
+        "firebase",
+        "sqlite",
+        "oracle db"
     ],
     "cloud_computing": [
-      "AWS", "Azure", "Google Cloud", "Docker", "Kubernetes", "Terraform", "CI/CD", "Serverless Computing"
+        "aws",
+        "azure",
+        "google cloud",
+        "docker",
+        "kubernetes",
+        "terraform",
+        "ci/cd",
+        "serverless computing"
     ],
     "cybersecurity": [
-      "Penetration Testing", "Ethical Hacking", "Cryptography", "Network Security", "Malware Analysis", "SOC Operations"
+        "penetration testing",
+        "ethical hacking",
+        "cryptography",
+        "network security",
+        "malware analysis",
+        "soc operations"
     ],
     "mobile_development": [
-      "Android Development", "iOS Development", "React Native", "Flutter", "Swift", "Kotlin"
+        "android development",
+        "ios development",
+        "react native",
+        "flutter",
+        "swift"
     ],
     "devops": [
-      "CI/CD", "Jenkins", "GitHub Actions", "Kubernetes", "Docker", "Ansible", "Terraform", "Prometheus", "Grafana"
+        "ci/cd",
+        "jenkins",
+        "github actions",
+        "kubernetes",
+        "docker",
+        "ansible",
+        "terraform",
+        "prometheus",
+        "grafana"
     ],
     "soft_skills": [
-      "Communication", "Teamwork", "Leadership", "Problem-Solving", "Time Management", "Critical Thinking"
+        "communication",
+        "teamwork",
+        "leadership",
+        "problem-solving",
+        "time management",
+        "critical thinking"
     ]
   }
   

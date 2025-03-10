@@ -1,6 +1,9 @@
 const AtsScore = require("../models/scoreModel");
 const axios = require("axios");
 const dotenv = require("dotenv");
+const fs = require("fs");
+const FormData = require("form-data");
+
 
 dotenv.config();
 
@@ -11,13 +14,16 @@ const sendResumeForAtsScore = async (req, res) => {
     if (!resume) {
       return res.status(404).json({ message: "Resume not found" });
     }
-    const atsResult = await axios.post(`${process.env.PYTHON_API_URL}/analyze`, {
-      resume: resume.fileUrl // Assuming fileUrl is the path to the resume file
-    }, {
+    const formData = new FormData();
+    formData.append('resume', fs.createReadStream(resume.fileUrl));
+    const atsResult = await axios.post(`${process.env.PYTHON_API_URL}/analyze`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
-      }
+      },
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity
     });
+
     const atsScore = await AtsScore.create({
       userId: resume.userId,
       resumeId: resume._id,

@@ -1,0 +1,137 @@
+/* Container */
+.ats-container {
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 20px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  /* Title */
+  .ats-title {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #333;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 10px;
+  }
+  
+  /* Score Container */
+  .score-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .score-value {
+    font-size: 24px;
+    font-weight: bold;
+    margin-right: 15px;
+  }
+  
+  /* Score Colors */
+  .green {
+    color: #28a745;
+  }
+  
+  .yellow {
+    color: #ffc107;
+  }
+  
+  .red {
+    color: #dc3545;
+  }
+  
+  /* Progress Bar */
+  .score-bar {
+    flex-grow: 1;
+    background: #e0e0e0;
+    height: 10px;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  
+  .score-fill {
+    height: 100%;
+    transition: width 0.5s ease-in-out;
+  }
+  
+  .green-fill {
+    background: #28a745;
+  }
+  
+  .yellow-fill {
+    background: #ffc107;
+  }
+  
+  .red-fill {
+    background: #dc3545;
+  }
+  
+  /* Feedback Section */
+  .feedback-section {
+    text-align: left;
+    margin-bottom: 20px;
+  }
+  
+  .feedback-section h3 {
+    font-size: 18px;
+    font-weight: bold;
+    color: #444;
+    margin-bottom: 5px;
+  }
+  
+  .feedback-section p {
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+    color: #555;
+  }
+  
+  /* Skills Section */
+  .skills-section {
+    text-align: left;
+    margin-bottom: 20px;
+  }
+  
+  .skills-section h3 {
+    font-size: 18px;
+    font-weight: bold;
+    color: #444;
+    margin-bottom: 5px;
+  }
+  
+  .skills-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .skill-tag {
+    background: #007bff;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 14px;
+  }
+  
+  /* Download Button */
+  .download-button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background 0.3s ease;
+  }
+  
+  .download-button:hover {
+    background: #0056b3;
+  }
+  
