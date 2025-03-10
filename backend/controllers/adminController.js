@@ -1,6 +1,9 @@
 const User = require("../models/userModel");
 const Resume = require("../models/resumeModel");
 const axios = require("axios");
+const dotenv = require("dotenv");
+
+dotenv.config();
 
 // Fetch All Users
 const getAllUsers = async (req, res) => {
@@ -30,7 +33,7 @@ const deleteUserById = async (req, res) => {
 // Train AI Model
 const trainAiModel = async (req, res) => {
   try {
-    const response = await axios.post("http://python-api-url/train-model");
+    const response = await axios.post(`${process.env.PYTHON_API_URL}/train`);
     res.status(200).json({ message: "Machine Learning model training started.", status: response.data.status });
   } catch (error) {
     res.status(500).json({ message: error.message });
