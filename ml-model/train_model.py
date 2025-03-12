@@ -1,20 +1,94 @@
-import pandas as pd
+from flask import Flask, request, jsonify
+from model.resume_parser import extract_text
+from model.feature_extractor import extract_skills, extract_experience
 import joblib
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
+import os
+from utils.logger import log_message
+from flask_cors import CORS
+import nltk
+import numpy as np
 
-# Load dataset
-df = pd.read_csv("data/training_data.csv")
+# Initialize NLTK resources
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt')
+    nltk.download('averaged_perceptron_tagger')
+    nltk.download('maxent_ne_chunker')
+    nltk.download('words')
+    nltk.download('stopwords')
 
-# Features & target
-X = df[['skills_count', 'experience_years']]
-y = df['ats_score']
+app = Flask(__name__)
+CORS(app)
 
-# Train ML model
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-model = LogisticRegression()
-model.fit(X_train, y_train)
+# Load the trained ML model & scaler
+MODEL_PATH = "model/model.pkl"
+SCALER_PATH = "model/scaler.pkl"
 
-# Save trained model
-joblib.dump(model, "model/model.pkl")
-print("Model trained & saved successfully!")
+if os.path.exists(MODEL_PATH) and os.path.exists(SCALER_PATH):
+    model = joblib.load(MODEL_PATH)
+    scaler = joblib.load(SCALER_PATH)
+    log_message("✅ Model & Scaler loaded successfully!")
+else:
+    log_message("❌ Error: Model or Scaler file not found!")
+    model = None
+    scaler = None
+
+@app.route('/analyze', methods=['POST'])
+def analyze_resume():
+    """Analyzes a resume file and returns ATS score."""
+    try:
+        if 'resume' not in request.files:
+            log_message("No file uploaded")
+            return jsonify({"error": "No file uploaded"}), 400
+
+        file = request.files['resume']
+        if not file.filename:
+            return jsonify({"error": "Empty file"}), 400
+
+        # Log file details
+        log_message(f"Received file: {file.filename}")
+        
+        # Extract text
+        text = extract_text(file)
+        if not text:
+            return jsonify({"error": "Could not extract text from file"}), 400
+        log_message(f"Extracted text length: {len(text)}")
+
+        # Extract features
+        skills = extract_skills(text)
+        experience = extract_experience(text)
+        log_message(f"Extracted skills: {len(skills)}, experience: {experience}")
+
+        # Predict ATS Score
+        input_data = np.array([[len(skills), experience]])
+        input_scaled = scaler.transform(input_data)  # Scale input
+        ats_score = model.predict(input_scaled)[0] * 100  # Convert back to 0-100 scale
+
+        return jsonify({
+            "score": round(ats_score, 2),
+            "skills": skills,
+            "experience": experience,
+            "status": "success"
+        })
+    except Exception as e:
+        log_message(f"Error in analyze_resume: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/models/status', methods=['GET'])
+def model_status():
+    """Returns the model's status."""
+    return jsonify({
+        "status": "Model is active",
+        "version": "1.0.3"
+    })
+
+@app.route('/train', methods=['POST'])
+def train_model():
+    """Triggers ML model training."""
+    os.system("python train_model.py")
+    return jsonify({"message": "Training started", "status": "In Progress"})
+
+if __name__ == '__main__':
+    log_message("Starting ML service...")
+    app.run(host='0.0.0.0', port=5001, debug=True)

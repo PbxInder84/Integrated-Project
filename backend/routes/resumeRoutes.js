@@ -7,8 +7,8 @@ const { authMiddleware } = require("../middleware/authMiddleware");
 router.use(authMiddleware);
 
 router.post("/upload", uploadResume);
-router.get("/:id", getResumeById);
 router.get("/user", getAllResumesForUser);
+router.get("/:id", getResumeById);
 router.delete("/:id", deleteResumeById);
 
 module.exports = router; 

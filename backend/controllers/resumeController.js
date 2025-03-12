@@ -32,40 +32,17 @@ const uploadResume = async (req, res) => {
     }
 
     try {
-      // First save the resume
+      const filePath = `/public/uploads/resumes/${req.file.originalname}`;
       const resume = await Resume.create({
         userId: req.user.id,
         filename: req.file.originalname,
-        fileUrl: `/uploads/resumes/${req.file.originalname}`
+        fileUrl: filePath
       });
 
-      try {
-        const formData = new FormData();
-        formData.append('resume', req.file.buffer, req.file.originalname);
+      // Ensure the file is saved to the correct path
+      fs.writeFileSync(`${process.cwd()}${filePath}`, req.file.buffer);
 
-        const response = await axios.post('http://localhost:5001/analyze', formData, {
-          headers: {
-            ...formData.getHeaders(),
-          },
-        });
-
-        const atsScore = await AtsScore.create({
-          userId: req.user.id,
-          resumeId: resume._id,
-          score: response.data.score,
-          feedback: "Analysis completed successfully",
-          skills: response.data.skills
-        });
-
-        res.status(200).json({ 
-          message: "Resume uploaded and analyzed successfully", 
-          resume, 
-          atsScore 
-        });
-      } catch (error) {
-        console.error('ML Service error:', error);
-        res.status(400).json({ error: error.response ? error.response.data : 'An error occurred' });
-      }
+      res.status(200).json({ message: "Resume uploaded successfully", resume });
     } catch (error) {
       console.error('Server error:', error);
       res.status(500).json({ message: error.message });

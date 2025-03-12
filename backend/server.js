@@ -14,6 +14,7 @@ const adminRoutes = require("./routes/adminRoutes");
 const healthRoutes = require("./routes/healthRoutes");
 const validateEnv = require("./config/vaildEnv");
 const resumeRoutes = require("./routes/resumeRoutes");
+const atsRoutes = require("./routes/atsRoutes");
 
 // connect to database
 connectDB();
@@ -43,6 +44,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/health", healthRoutes);
 app.use("/api/resumes", resumeRoutes);
+app.use("/api/ats", atsRoutes);
 
 // server start
 app.listen(process.env.PORT, () => {

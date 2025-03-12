@@ -2,7 +2,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const validateEnv = () => {
-    const required = ['PYTHON_API_URL', 'MONGO_URI', 'JWT_SECRET_KEY'];
+    const required = ['ML_API_URL', 'MONGO_URI', 'JWT_SECRET_KEY'];
     if(required){
         console.log("ENV Variables are set");
     }    
