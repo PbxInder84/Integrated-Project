@@ -1,0 +1,32 @@
+{
+  "name": "resume-analyzer",
+  "version": "1.0.0",
+  "description": "Resume Analyzer Web Application",
+  "scripts": {
+    "start:backend": "cd backend && npm run dev",
+    "start:frontend": "cd frontend && npm start",
+    "start:ml": "cd ml-service && python app.py",
+    "install:backend": "cd backend && npm install",
+    "install:frontend": "cd frontend && npm install",
+    "install:all": "npm run install:backend && npm run install:frontend",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\" \"npm run start:ml\"",
+    "build": "cd frontend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "setup:env": "node setup-env.js",
+    "copy:env": "node copy-env.js",
+    "prod:install": "npm run install:all && cd ml-service && pip install -r requirements.txt && python -m spacy download en_core_web_sm",
+    "prod:build": "npm run build:frontend",
+    "prod:start": "NODE_ENV=production concurrently \"cd backend && npm start\" \"cd ml-service && python app.py\"",
+    "prod:start:win": "set NODE_ENV=production && concurrently \"cd backend && npm start\" \"cd ml-service && python app.py\"",
+    "heroku-postbuild": "npm run install:all && npm run build:frontend"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=7.0.0"
+  }
+} 
