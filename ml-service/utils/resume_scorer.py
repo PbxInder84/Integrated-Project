@@ -7,10 +7,19 @@ import re
 from nltk.tokenize import word_tokenize, sent_tokenize
 from textblob import TextBlob
 import string
-import datetime  # Add missing import for datetime
+import datetime
 
 # Initialize logger
 logger = logging.getLogger(__name__)
+
+# Import TensorFlow model
+try:
+    from utils.tensorflow_model import analyze_resume_with_tensorflow
+    TENSORFLOW_MODEL_AVAILABLE = True
+    logger.info("TensorFlow model is available")
+except ImportError:
+    TENSORFLOW_MODEL_AVAILABLE = False
+    logger.warning("TensorFlow model not available. Using traditional scoring only.")
 
 # Custom functions to avoid NLTK tokenization issues
 def custom_word_tokenize(text):
@@ -43,64 +52,70 @@ def score_resume(extracted_info, text):
     try:
         logger.info("Starting resume scoring")
         
-        # Initialize score and feedback
-        score = 0
-        feedback = []
-        scores_by_category = {}
+        # Priority: Use advanced TensorFlow model if available
+        if TENSORFLOW_MODEL_AVAILABLE:
+            try:
+                logger.info("Using TensorFlow model for advanced scoring")
+                
+                # Get comprehensive analysis from TensorFlow model
+                model_result = analyze_resume_with_tensorflow(text)
+                
+                # Extract main components from model analysis
+                model_scores = model_result.get('scores', {})
+                model_feedback = model_result.get('feedback', [])
+                
+                # Traditional scoring as backup and for detailed category scores
+                traditional_scores, traditional_feedback, category_scores = get_traditional_scoring(extracted_info, text)
+                
+                # Blend scores (60% AI model, 40% traditional)
+                final_score = int(model_scores.get('overall_score', 0) * 0.6 + traditional_scores * 0.4)
+                
+                # Add model scores to category scores
+                category_scores.extend([
+                    f"AI Content Quality: {model_scores.get('content_quality', 0)}/100",
+                    f"AI ATS Compatibility: {model_scores.get('ats_compatibility', 0)}/100",
+                    f"AI Keyword Optimization: {model_scores.get('keyword_optimization', 0)}/100"
+                ])
+                
+                # Combine feedback (favor model feedback but include top traditional feedback)
+                combined_feedback = []
+                
+                # Add all model feedback
+                for item in model_feedback:
+                    combined_feedback.append(f"AI Analysis: {item}")
+                
+                # Add top 2 traditional feedback items that aren't covered by model feedback
+                traditional_count = 0
+                for item in traditional_feedback:
+                    # Check if this feedback item is unique compared to model feedback
+                    if not any(item.lower() in mf.lower() for mf in model_feedback) and traditional_count < 2:
+                        combined_feedback.append(item)
+                        traditional_count += 1
+                
+                # Ensure combined feedback isn't too long
+                combined_feedback = combined_feedback[:7]
+                
+                logger.info(f"Scoring completed with AI model. Final score: {final_score}")
+                
+                return {
+                    "score": final_score,
+                    "feedback": combined_feedback,
+                    "category_scores": category_scores
+                }
+                
+            except Exception as e:
+                logger.error(f"Error using TensorFlow model: {str(e)}")
+                # Fall back to traditional scoring
+                logger.warning("Falling back to traditional scoring method")
         
-        # Get scores for each category
-        contact_score, contact_feedback = score_contact_info(extracted_info)
-        scores_by_category["Contact Information"] = contact_score
-        feedback.extend(contact_feedback)
+        # Fallback: Use only traditional scoring
+        traditional_score, traditional_feedback, category_scores = get_traditional_scoring(extracted_info, text)
         
-        education_score, education_feedback = score_education(extracted_info)
-        scores_by_category["Education"] = education_score
-        feedback.extend(education_feedback)
-        
-        experience_score, experience_feedback = score_experience(extracted_info)
-        scores_by_category["Experience"] = experience_score
-        feedback.extend(experience_feedback)
-        
-        skills_score, skills_feedback = score_skills(extracted_info)
-        scores_by_category["Skills"] = skills_score
-        feedback.extend(skills_feedback)
-        
-        content_score, content_feedback = score_content_quality(text, extracted_info)
-        scores_by_category["Content Quality"] = content_score
-        feedback.extend(content_feedback)
-        
-        additional_score, additional_feedback = score_additional_sections(extracted_info)
-        scores_by_category["Additional Sections"] = additional_score
-        feedback.extend(additional_feedback)
-        
-        # Calculate total score with weighted categories
-        weights = {
-            "Contact Information": 10,  # Basic but essential
-            "Education": 15,           # Important but not always the focus
-            "Experience": 30,          # Usually most important
-            "Skills": 25,              # Very important
-            "Content Quality": 15,     # Overall quality matters
-            "Additional Sections": 5   # Nice to have
-        }
-        
-        total_score = 0
-        for category, category_score in scores_by_category.items():
-            total_score += category_score * weights[category] / 100
-        
-        # Ensure score is within bounds
-        total_score = max(0, min(round(total_score), 100))
-        
-        # Add score by category to detailed feedback
-        category_scores = [f"{category}: {score}/100" for category, score in scores_by_category.items()]
-        
-        # Prioritize and limit feedback to most important points
-        feedback = prioritize_feedback(feedback)
-        
-        logger.info(f"Resume scoring completed with score: {total_score}")
+        logger.info(f"Resume scoring completed with traditional method. Score: {traditional_score}")
         
         return {
-            "score": total_score,
-            "feedback": feedback,
+            "score": traditional_score,
+            "feedback": traditional_feedback,
             "category_scores": category_scores
         }
         
@@ -109,8 +124,65 @@ def score_resume(extracted_info, text):
         # Return a default score in case of error
         return {
             "score": 50,  # Neutral score
-            "feedback": ["Error processing the resume for scoring. Please check the format and try again."]
+            "feedback": ["Error processing the resume for scoring. Please check the format and try again."],
+            "category_scores": ["Error: Unable to calculate category scores"]
         }
+
+def get_traditional_scoring(extracted_info, text):
+    """Get scores using the traditional method"""
+    # Initialize score and feedback
+    feedback = []
+    scores_by_category = {}
+    
+    # Get scores for each category
+    contact_score, contact_feedback = score_contact_info(extracted_info)
+    scores_by_category["Contact Information"] = contact_score
+    feedback.extend(contact_feedback)
+    
+    education_score, education_feedback = score_education(extracted_info)
+    scores_by_category["Education"] = education_score
+    feedback.extend(education_feedback)
+    
+    experience_score, experience_feedback = score_experience(extracted_info)
+    scores_by_category["Experience"] = experience_score
+    feedback.extend(experience_feedback)
+    
+    skills_score, skills_feedback = score_skills(extracted_info)
+    scores_by_category["Skills"] = skills_score
+    feedback.extend(skills_feedback)
+    
+    content_score, content_feedback = score_content_quality(text, extracted_info)
+    scores_by_category["Content Quality"] = content_score
+    feedback.extend(content_feedback)
+    
+    additional_score, additional_feedback = score_additional_sections(extracted_info)
+    scores_by_category["Additional Sections"] = additional_score
+    feedback.extend(additional_feedback)
+    
+    # Calculate total score with weighted categories
+    weights = {
+        "Contact Information": 10,  # Basic but essential
+        "Education": 15,           # Important but not always the focus
+        "Experience": 30,          # Usually most important
+        "Skills": 25,              # Very important
+        "Content Quality": 15,     # Overall quality matters
+        "Additional Sections": 5   # Nice to have
+    }
+    
+    total_score = 0
+    for category, category_score in scores_by_category.items():
+        total_score += category_score * weights[category] / 100
+    
+    # Ensure score is within bounds
+    total_score = max(0, min(round(total_score), 100))
+    
+    # Add score by category to detailed feedback
+    category_scores = [f"{category}: {score}/100" for category, score in scores_by_category.items()]
+    
+    # Prioritize and limit feedback to most important points
+    feedback = prioritize_feedback(feedback)
+    
+    return total_score, feedback, category_scores
 
 def score_contact_info(extracted_info):
     """Score contact information completeness and quality."""
@@ -548,4 +620,4 @@ def prioritize_feedback(feedback_list, max_items=5):
             sorted_feedback.append(item)
     
     # Return limited list
-    return sorted_feedback[:max_items] 
+    return sorted_feedback[:max_items]

@@ -111,7 +111,8 @@ def extract_resume_info(text):
             # Additional sections
             "certifications": extract_certifications(doc, text),
             "languages": extract_languages(doc, text),
-            "summary": extract_summary(doc, text)
+            "summary": extract_summary(doc, text),
+            "projects": extract_projects(doc, text)
         }
         
         logger.info("Information extraction completed")
@@ -129,7 +130,8 @@ def extract_resume_info(text):
             "experience": [],
             "certifications": [],
             "languages": [],
-            "summary": ""
+            "summary": "",
+            "projects": []
         }
 
 def extract_name(doc, text):
@@ -595,3 +597,129 @@ def extract_summary(doc, text):
                 break
     
     return summary 
+
+def extract_projects(doc, text):
+    """
+    Extract projects from resume text.
+    
+    Args:
+        doc: spaCy Doc object
+        text (str): Resume text
+        
+    Returns:
+        list: Extracted projects
+    """
+    projects = []
+    
+    # Method 1: Look for "Projects" or "Project" section
+    section_patterns = [
+        r'(?i)Projects?[ \t]*(?:\(.*?\))?[ \t]*:',
+        r'(?i)Projects?[ \t]*\n',
+        r'(?i)[\n\r][ \t]*projects?[ \t]*[\n\r]',
+        r'(?i)^[ \t]*projects?[ \t]*:?$',
+        r'(?i)[\n\r][ \t]*projects?[ \t]*:?[ \t]*[\n\r]'
+    ]
+    
+    section_text = ""
+    for pattern in section_patterns:
+        matches = re.finditer(pattern, text)
+        for match in matches:
+            start_idx = match.end()
+            next_section = None
+            
+            # Look for the next section
+            section_headers = [
+                r'(?i)[\n\r]+[ \t]*education[ \t]*:?',
+                r'(?i)[\n\r]+[ \t]*experience[ \t]*:?',
+                r'(?i)[\n\r]+[ \t]*work experience[ \t]*:?',
+                r'(?i)[\n\r]+[ \t]*skills[ \t]*:?',
+                r'(?i)[\n\r]+[ \t]*certifications?[ \t]*:?',
+                r'(?i)[\n\r]+[ \t]*languages?[ \t]*:?',
+                r'(?i)[\n\r]+[ \t]*awards?[ \t]*:?',
+                r'(?i)[\n\r]+[ \t]*publications?[ \t]*:?',
+                r'(?i)[\n\r]+[ \t]*references?[ \t]*:?',
+                r'(?i)[\n\r]+[ \t]*interests?[ \t]*:?'
+            ]
+            
+            # Find the next section after the projects section
+            min_pos = len(text)
+            for header in section_headers:
+                header_match = re.search(header, text[start_idx:])
+                if header_match and start_idx + header_match.start() < min_pos:
+                    min_pos = start_idx + header_match.start()
+                    next_section = header_match
+            
+            # Extract section text
+            end_idx = min_pos if next_section else len(text)
+            section_text = text[start_idx:end_idx].strip()
+            break
+        
+        if section_text:
+            break
+    
+    # If a projects section was found, extract the projects
+    if section_text:
+        # Split into project entries (look for bullet points or numbered lists)
+        project_entries = re.split(r'[\n\r]+(?:\s*[-•*]\s*|\s*\d+\.\s*)', section_text)
+        project_entries = [entry.strip() for entry in project_entries if entry.strip()]
+        
+        # Process each project entry
+        for entry in project_entries:
+            # Look for project name/title (typically at the beginning or in bold/emphasized)
+            project_name_pattern = r'^([^:,.\n]+(:|–|-|\())' # Get text before first colon, dash, or parenthesis
+            project_name_match = re.search(project_name_pattern, entry)
+            
+            project_dict = {"name": "", "description": "", "technologies": []}
+            
+            if project_name_match:
+                project_dict["name"] = project_name_match.group(1).rstrip(':–-(').strip()
+                # The rest is description
+                description = entry[project_name_match.end():].strip()
+                if description:
+                    project_dict["description"] = description
+            else:
+                project_dict["description"] = entry
+            
+            # Look for technologies/skills mentioned
+            technologies = []
+            for skill in SKILLS_DB["technical_skills"]:
+                if re.search(r'\b' + re.escape(skill) + r'\b', entry, re.IGNORECASE):
+                    technologies.append(skill)
+            
+            if technologies:
+                project_dict["technologies"] = technologies
+            
+            projects.append(project_dict)
+    
+    # Method 2: Look for project indicators in experience section
+    if not projects:
+        # First, split the text into sentences
+        sentences = sent_tokenize(text)
+        
+        # Look for sentences with project indicators
+        project_indicators = ['project', 'developed', 'implemented', 'created', 'built', 'designed']
+        for i, sentence in enumerate(sentences):
+            for indicator in project_indicators:
+                if re.search(r'\b' + re.escape(indicator) + r'\b', sentence, re.IGNORECASE):
+                    # Get a few sentences for context
+                    start_idx = max(0, i - 1)
+                    end_idx = min(len(sentences), i + 3)
+                    context = ' '.join(sentences[start_idx:end_idx])
+                    
+                    # Extract project information
+                    project_dict = {"name": "", "description": context, "technologies": []}
+                    
+                    # Look for technologies/skills mentioned
+                    technologies = []
+                    for skill in SKILLS_DB["technical_skills"]:
+                        if re.search(r'\b' + re.escape(skill) + r'\b', context, re.IGNORECASE):
+                            technologies.append(skill)
+                    
+                    if technologies:
+                        project_dict["technologies"] = technologies
+                    
+                    if project_dict not in projects:  # Avoid duplicates
+                        projects.append(project_dict)
+                    break
+    
+    return projects 

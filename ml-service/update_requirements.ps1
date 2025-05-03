@@ -1,4 +1,7 @@
-﻿# Core ML & NLP libraries
+# PowerShell script to update requirements.txt
+
+$requirements = @"
+# Core ML & NLP libraries
 tensorflow==2.13.0
 numpy>=1.22.0
 scikit-learn>=1.0.2
@@ -28,3 +31,8 @@ joblib>=1.2.0
 # Monitoring and logging
 prometheus-client>=0.16.0
 sentry-sdk>=1.17.0
+"@
+
+# Write to requirements.txt file
+$requirements | Out-File -FilePath "requirements.txt" -Encoding utf8
+Write-Host "requirements.txt has been updated successfully." 

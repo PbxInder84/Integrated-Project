@@ -11,11 +11,13 @@ import ResumeDetail from './components/Resume/ResumeDetail';
 import AdminDashboard from './components/Admin/AdminDashboard';
 import UserManagement from './components/Admin/UserManagement';
 import Navbar from './components/Layout/Navbar';
+import Preloader from './components/Layout/Preloader';
 import PrivateRoute from './components/Auth/PrivateRoute';
 import AdminRoute from './components/Auth/AdminRoute';
 import Homepage from './components/Homepage/Homepage';
 import Profile from './components/User/Profile';
 import Settings from './components/User/Settings';
+import GuestResumeAnalyzer from './components/Resume/GuestResumeAnalyzer';
 
 // API configuration - determine base URL based on environment
 const apiBaseURL = process.env.NODE_ENV === 'production' 
@@ -28,7 +30,19 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [appLoading, setAppLoading] = useState(true);
+  const [routeLoading, setRouteLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [previousPath, setPreviousPath] = useState('');
+
+  useEffect(() => {
+    // Simulate initial app loading
+    const timer = setTimeout(() => {
+      setAppLoading(false);
+    }, 2500); // Show preloader for 2.5 seconds
+
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     // Check if user is logged in on component mount
@@ -38,7 +52,34 @@ function App() {
     } else {
       setLoading(false);
     }
-  }, []);
+
+    // Setup navigation event listeners for route changes
+    const handleRouteChange = () => {
+      const currentPath = window.location.pathname;
+      if (previousPath !== currentPath) {
+        setRouteLoading(true);
+        setPreviousPath(currentPath);
+        
+        setTimeout(() => {
+          setRouteLoading(false);
+        }, 800);
+      }
+    };
+
+    window.addEventListener('popstate', handleRouteChange);
+    
+    // Custom event for navigation via Link components
+    const originalPushState = window.history.pushState;
+    window.history.pushState = function() {
+      originalPushState.apply(this, arguments);
+      handleRouteChange();
+    };
+
+    return () => {
+      window.removeEventListener('popstate', handleRouteChange);
+      window.history.pushState = originalPushState;
+    };
+  }, [previousPath]);
 
   const loadUser = async (token) => {
     try {
@@ -92,15 +133,16 @@ function App() {
     setUser(null);
   };
 
-  if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-    </div>;
+  if (loading && appLoading) {
+    return <Preloader isLoading={true} />;
   }
 
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
+        {/* Custom preloader */}
+        <Preloader isLoading={appLoading || routeLoading} />
+        
         <Navbar isAuthenticated={isAuthenticated} user={user} logout={logout} />
         
         {error && (
@@ -117,7 +159,7 @@ function App() {
         
         <main className="container mx-auto px-4 py-8 pt-20">
           <Routes>
-            <Route path="/" element={<Homepage />} />
+            <Route path="/" element={<Homepage isAuthenticated={isAuthenticated} user={user} />} />
             
             <Route path="/login" element={
               isAuthenticated ? <Navigate to="/dashboard" /> : <Login login={login} />
@@ -126,6 +168,8 @@ function App() {
             <Route path="/register" element={
               isAuthenticated ? <Navigate to="/dashboard" /> : <Register register={register} />
             } />
+            
+            <Route path="/guest-analysis" element={<GuestResumeAnalyzer />} />
             
             <Route path="/dashboard" element={
               <PrivateRoute isAuthenticated={isAuthenticated}>
